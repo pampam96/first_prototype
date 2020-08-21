@@ -1,0 +1,32 @@
+Read Me:
+
+Packages:
+1. robot_test : has the robot urdf description in it and some launch files in case you want to simply the check the bare model in gazebo or rviz. The one that we use for our simulations is robot_test2.urdf
+
+2. robot_test_gazebo: has the gazebo launch file which other packages are depended on and the world information.
+
+3. robot_test_control1: has the controllers the one used with moveit is the 3rd controller which is a joint trajectory controller. (listenertraj.py file is here also and gets the joint position values from the controller which are needed to move the robot while raspu_sub.py sends those joint values to the arduino) 
+
+4. robot_test_moveit: includes all the neccesary configurations to use moveit, here it also includes the python script to send commands for moving the end effector (move_group_python_interface_tutorial.py) At the same time the end effector pose can even be set manually through the rviz gui. Then to send the joint information you press plan and execute button. 
+
+The order in which the files are launched is: 
+
+First launch gazebo model by:
+roslaunch robot_test_gazebo robot_test_world.launch
+
+Then launch the state and robot controllers by: 
+roslaunch robot_test_control1 robot_test_control3.launch
+
+Then launch the moveit planning software:  
+roslaunch robot_testv2_moveit robot_test_planning_execution.launch
+
+Then launch py script for command: 
+//this file is optional as the robot can also be moved from the rviz gui, in this file however you are sending the cartesian position of end effector then the moveit interface calculates the necessary joint values to achieve that position//
+******for simulating the workspace and save the achievable joints this is also the file that we use, the current file now has that code instead.*********
+rosrun robot_test_moveit move_group_python_interface_tutorial.py
+
+Then launch py script for data subscribe:
+//Here we can see whats the final joint information which will be sent to arduino to move the motors//
+rosrun robot_test_control1 listenertraj.py
+
+
