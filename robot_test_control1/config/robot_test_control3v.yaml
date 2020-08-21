@@ -1,0 +1,23 @@
+robot_test:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 50
+
+  # Position Controllers ---------------------------------------
+  chain_position_controller:
+    type: velocity_controllers/JointTrajectoryController
+    joints:
+      - Joint1
+      - Joint2
+      - Joint2_3
+      - Joint3_1
+      - Joint4
+
+  chain_position_controller2:
+    type: velocity_controllers/JointTrajectoryController
+    joints:
+      - Joint2_2
+      - Joint5
+      - Joint3_2
+      - Joint4_2
