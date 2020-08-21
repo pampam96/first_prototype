@@ -1,0 +1,16 @@
+controller_manager_ns: ''
+controller_list:
+  - name: robot_test/chain_position_controller
+    action_ns: "follow_joint_trajectory"
+    type: FollowJointTrajectory
+    default: true
+    joints: [Joint1, Joint2, Joint2_3, Joint3_1, Joint4]
+  - name: robot_test/chain_position_controller2
+    action_ns: "follow_joint_trajectory"
+    type: FollowJointTrajectory
+    default: true
+    joints: [Joint2_2, Joint5, Joint3_2, Joint4_2]
+    #[Joint1, Joint2, Joint2_3, Joint3_1, Joint4, Joint2_2, Joint5, Joint3_2, Joint4_2]
+    #  - Joint1
+    #  - Joint2
+    #  - Joint3_1

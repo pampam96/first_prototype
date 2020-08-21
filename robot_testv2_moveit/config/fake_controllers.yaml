@@ -1,0 +1,14 @@
+controller_list:
+  - name: fake_chain1_controller
+    joints:
+      - Joint1
+      - Joint2
+      - Joint2_3
+      - Joint3_1
+      - Joint4
+  - name: fake_chain2_controller
+    joints:
+      - Joint2_2
+      - Joint5
+      - Joint3_2
+      - Joint4_2
