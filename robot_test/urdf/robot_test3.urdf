@@ -1,0 +1,358 @@
+<?xml version="1.0"?>
+<!-- Revolute-Revolute Manipulator -->
+<robot name="robot_test" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<link name="world"/>
+    <link name="base_link">
+
+<inertial>
+            <origin xyz="0 0 0.0175" rpy="0 0 0" />
+            <mass value="0.168" />
+              <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.00049" iyz="0" izz="0.00097" />
+        </inertial>
+
+        <visual>
+            <!--<origin xyz="0 0 0.0175" rpy="0 0 0" />
+            <geometry>
+                <box size="0.14 0.14 0.035" />
+            </geometry>-->
+            <origin xyz="0.07 0.07 0" rpy="1.5708 0 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/collision_base.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+            </material>
+        </visual>
+        <collision>
+          <origin xyz="0.07 0.07 0" rpy="1.5708 0 0" />
+          <geometry>
+              <mesh filename="package://robot_test/meshes/collision_base.STL" />
+          </geometry>
+        </collision>
+    </link>
+
+    <joint name="Joint0" type="fixed">
+        <parent link="world" />
+        <child link="base_link" />
+    </joint>
+ <link name="Link1">
+
+<inertial>
+            <origin xyz="0 0.04 0" rpy="0 0 0" />
+            <mass value="0.125076916309071" />
+            <inertia ixx="0.000213301900832475" ixy="7.20042983445819E-14" ixz="1.93294951442505E-15" iyy="0.000241629980148854" iyz="-3.15911644980272E-07" izz="15.71772481619727E-05" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link1.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link1.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="Joint1" type="revolute">
+        <origin xyz="0 0 0.04" rpy="1.5708 0 -2.3561" />
+        <parent link="base_link" />
+        <child link="Link1" />
+        <axis xyz="0 1 0" />
+        <limit effort="3" velocity="5.0" lower="-1.34" upper="1.34" />
+        <dynamics damping="0.7"/>
+    </joint>
+    <link name="Link2">
+
+<inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="0.0217880910599681" />
+            <inertia ixx="0.000003227" ixy="0" ixz="0" iyy="0.00005049" iyz="0" izz="0.00005" />
+        </inertial>
+        <visual>
+            <origin xyz="0 -0.015 0.02" rpy="-1.5708 1.5708 0" />
+            <geometry>
+                <mesh filename="package://asm_robotv2_4/meshes/Link2.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.752941176470588 0.752941176470588 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 -0.015 0.02" rpy="-1.5708 1.5708 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link2.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="Joint2" type="prismatic">
+        <origin xyz="0 0.068 0" rpy="0 0 0" />
+        <parent link="Link1" />
+        <child link="Link2" />
+        <axis xyz="0 0 1" />
+        <limit lower="-0.035" upper="0.035" effort="3" velocity="5.0"/>
+        <dynamics damping="0.3"/>
+    </joint>
+
+  <link name="Fake"/>
+  <joint name="Joint2_3" type="continuous">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <parent link="Link2" />
+      <child link="Fake" />
+      <axis xyz="1 0 0" />
+  </joint>
+
+  <link name="Link3_1">
+<inertial>
+            <origin xyz="0 0.001 0" rpy="-1.5708 0 0" />
+            <mass value="0.00687392728317165" />
+            <inertia ixx="4.68999634639831E-07"
+        ixy="-6.61744490042422E-22"
+        ixz="-1.20561574279604E-22"
+        iyy="5.02478511000677E-07"
+        iyz="1.21000404772896E-09"
+        izz="8.02816429799795E-07" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0.001 0.02" rpy="-1.5708 0 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link3_1.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.529411764705882 1 0.752941176470588 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0.02" rpy="-1.5708 0 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link3_1.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="Joint3_1" type="prismatic">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="Fake" />
+        <child link="Link3_1" />
+        <axis xyz="1 0 0" />
+        <limit lower="-0.03125" upper="0.03125" effort="3" velocity="5.0" />
+        <dynamics damping="0.7"/>
+    </joint>
+
+    <link name="Link4">
+
+  <inertial>
+              <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+              <mass value="0.00687392728317165" />
+              <inertia ixx="4.68999634639831E-07"
+          ixy="-6.61744490042422E-22"
+          ixz="-1.20561574279604E-22"
+          iyy="5.02478511000677E-07"
+          iyz="1.21000404772896E-09"
+          izz="8.02816429799795E-07" />
+          </inertial>
+
+          <visual>
+              <origin xyz="0 0 5" rpy="0 0 0" />
+              <geometry>
+                  <box size="0.002 0.002 0.1" />
+              </geometry>
+              <material name="">
+                  <color rgba="0.529411764705882 1 0.752941176470588 1" />
+              </material>
+          </visual>
+          <collision>
+              <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+              <geometry>
+                  <box size="0.002 0.002 0.1" />
+              </geometry>
+          </collision>
+      </link>
+      <joint name="Joint4" type="fixed">
+          <origin xyz="0 0 0.022" rpy="-1.5 0 0" />
+          <parent link="Link3_1" />
+          <child link="Link4" />
+          <axis xyz="1 0 0" />
+          <!--<limit lower="-0.03125" upper="0.03125" effort="3" velocity="5.0" />-->
+          <!--<dynamics damping="0.7"/>-->
+      </joint>
+
+    <link name="Link2_2">
+
+<inertial>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <mass value="0.0198869983841949" />
+            <inertia ixx="0.000003227" ixy="0" ixz="0" iyy="0.00005049" iyz="0" izz="0.00005" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0.015 -0.013" rpy="-1.5708 1.5708 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link2_2.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="0.752941176470588 0.752941176470588 1 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0.015 -0.013" rpy="-1.5708 1.5708 0" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link2_2.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="Joint2_2" type="prismatic">
+        <origin xyz="0 0.028 0" rpy="0 0 0" />
+        <parent link="Link1" />
+        <child link="Link2_2" />
+        <axis xyz="0 0 1" />
+        <limit lower="-0.035" upper="0.035" effort="3" velocity="5.0" />
+        <dynamics damping="0.7"/>
+    </joint>
+
+    <link name="Fake2"/>
+    <joint name="Joint5" type="continuous">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="Link2_2" />
+        <child link="Fake2" />
+        <axis xyz="1 0 0" />
+    </joint>
+    <link name="Link3_2">
+
+<inertial>
+            <origin xyz="0 0 0" rpy="0 -1.5708 -1.5708" />
+            <mass value="0.00392509494863912" />
+            <inertia ixx="1.22511067255343E-07"
+        ixy="-3.59085107182492E-09"
+        ixz="1.01277926249461E-22"
+        iyy="2.33144279565317E-07"
+        iyz="-1.75258892284673E-23"
+        izz="2.06480464452128E-07" />
+        </inertial>
+
+        <visual>
+            <origin xyz="0 0.008 0.015" rpy="0 -1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link3_2.STL" />
+            </geometry>
+            <material name="">
+                <color rgba="1 0.501960784313725 0.501960784313725 1" />
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0.008 0.015" rpy="0 -1.5708 -1.5708" />
+            <geometry>
+                <mesh filename="package://robot_test/meshes/Link3_2.STL" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="Joint3_2" type="prismatic">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="Fake2" />
+        <child link="Link3_2" />
+        <axis xyz="1 0 0" />
+        <limit lower="-0.03125" upper="0.03125" effort="3" velocity="5.0" />
+        <dynamics damping="0.7"/>
+    </joint>
+
+        <link name="Link5">
+
+      <inertial>
+                  <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+                  <mass value="0.00687392728317165" />
+                  <inertia ixx="4.68999634639831E-07"
+              ixy="-6.61744490042422E-22"
+              ixz="-1.20561574279604E-22"
+              iyy="5.02478511000677E-07"
+              iyz="1.21000404772896E-09"
+              izz="8.02816429799795E-07" />
+              </inertial>
+
+              <visual>
+                  <origin xyz="0 0 0" rpy="0 0 0" />
+                  <geometry>
+                      <box size="0.002 0.002 0.1" />
+                  </geometry>
+                  <material name="">
+                      <color rgba="0.529411764705882 1 0.752941176470588 1" />
+                  </material>
+              </visual>
+              <collision>
+                  <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+                  <geometry>
+                      <box size="0.002 0.002 0.1" />
+                  </geometry>
+              </collision>
+          </link>
+          <joint name="Joint6" type="fixed">
+              <origin xyz="0 0 0.02" rpy="-1.5 0 0" />
+              <parent link="Link3_2" />
+              <child link="Link5" />
+              <axis xyz="1 0 0" />
+              <!--<limit lower="-0.03125" upper="0.03125" effort="3" velocity="5.0" />-->
+              <!--<dynamics damping="0.7"/>-->
+          </joint>
+
+    <transmission name="trans_Joint1">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="Joint1">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="Joint1_motor">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        <transmission name="trans_Joint2">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="Joint2">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="Joint2_motor">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        <transmission name="trans_Joint3_1">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="Joint3_1">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="Joint3_1_motor">
+                <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        <transmission name="trans_Joint2_2">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="Joint2_2">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="Joint2_2_motor">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        <transmission name="trans_Joint3_2">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="Joint3_2">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="Joint3_2_motor">
+                <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+        </transmission>
+        <gazebo>
+  <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+    <robotNamespace>/robot_test</robotNamespace>
+    <robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
+  </plugin>
+</gazebo>
+</robot>
