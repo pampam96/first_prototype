@@ -1,0 +1,7 @@
+Arduino ROS:
+
+rosrun rosserial_python serial_node.py /dev/ttyACM0
+
+rostopic pub servo std_msgs/UInt 0 
+
+
