@@ -53,7 +53,7 @@ def talker():
     old_tbc=[]
     det_b=[]
 
-    trackername="csrt"
+    trackername="kcf"
     OPENCV_OBJECT_TRACKERS = {
     "csrt": cv2.TrackerCSRT_create,
     "kcf": cv2.TrackerKCF_create,
@@ -79,10 +79,10 @@ def talker():
 
     ######### Open cv functions #########
     def red_hsv():
-        lower_red = np.array([0,143,0])
+        lower_red = np.array([0,143,83])
         upper_red = np.array([12,255,255])
 
-        lower_red2 = np.array([118,73,0])
+        lower_red2 = np.array([118,73,83])
         upper_red2 = np.array([179,255,255])
 
         hsvr1 = cv2.inRange(hsv, lower_red, upper_red)
@@ -123,10 +123,10 @@ def talker():
 
     def detection_r(hsv):
 
-        lower_red = np.array([0,143,0])
+        lower_red = np.array([0,143,83])
         upper_red = np.array([12,255,255])
 
-        lower_red2 = np.array([118,73,0])
+        lower_red2 = np.array([118,73,83])
         upper_red2 = np.array([179,255,255])
 
         hsvr1 = cv2.inRange(hsv, lower_red, upper_red)
@@ -139,8 +139,13 @@ def talker():
         #print(len(contours))
         for cnt in contours:
             M=cv2.moments(cnt)
+            epsilon=0.01*cv2.arcLength(cnt,True)
+            #print('epsilon',epsilon)
+            #Circular objects will have higher number of points.
+            approx = cv2.approxPolyDP(cnt,epsilon,True)
+            #print('aprox',approx)
             #and M['m00']<threshold2
-            if M['m00']>threshold:
+            if M['m00']>threshold and len(approx) > 8:
                 # print('blob detected')
                 x,y,w,h = cv2.boundingRect(cnt)
                 #print('bounding rec', x,y,w,h)
@@ -159,6 +164,50 @@ def talker():
             if t[3]>0.40:
                 del track_init[i]
         #return(hsvr)
+
+
+    def detection_r2(hsv):
+
+        lower_red = np.array([0,143,83])
+        upper_red = np.array([12,255,255])
+
+        lower_red2 = np.array([118,73,83])
+        upper_red2 = np.array([179,255,255])
+
+        hsvr1 = cv2.inRange(hsv, lower_red, upper_red)
+        hsvr2 = cv2.inRange(hsv, lower_red2, upper_red2)
+        hsvr=hsvr1+hsvr2
+        hsvr=cv2.morphologyEx(hsvr, cv2.MORPH_OPEN, kernel)
+            ####Detection Code###########
+        im2,contours,hierarchy= cv2.findContours(hsvr, 1, 2)
+
+            #print(len(contours))
+        for cnt in contours:
+            M=cv2.moments(cnt)
+            epsilon=0.01*cv2.arcLength(cnt,True)
+                #print('epsilon',epsilon)
+                #Circular objects will have higher number of points.
+            approx = cv2.approxPolyDP(cnt,epsilon,True)
+                #print('aprox',approx)
+                #and M['m00']<threshold2
+            if M['m00']>threshold and len(approx) > 8:
+                    # print('blob detected')
+                x,y,w,h = cv2.boundingRect(cnt)
+                    #print('bounding rec', x,y,w,h)
+                xy,wh,r=cv2.minAreaRect(cnt)
+                    #print('rectangle', rect)#this has (x,y),(w,h),(rot)
+                    #box=cv2.boxPoints(rect)# four x,y
+                    #print('box',box)
+                    #cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                    #cv2.rectangle(frame, (int(xy[0]),int(xy[1])), (int(xy[0] + wh[0]), int(xy[1] + wh[1])), (0, 255, 255), 1)
+
+                zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
+                    #print('zDepth',zDepth)
+                if zDepth<0.4:
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+                    cv2.rectangle(frame, (int(xy[0]),int(xy[1])), (int(xy[0] + wh[0]), int(xy[1] + wh[1])), (0, 255, 255), 1)
+
+
     def detection_g(hsv2):
 
         # define range of blue color in HSV
@@ -208,12 +257,18 @@ def talker():
         #print(len(contours))
         for cnt in contours:
             M=cv2.moments(cnt)
-            if M['m00']>threshold:
+            epsilon=0.01*cv2.arcLength(cnt,True)
+            #print('epsilon',epsilon)
+            #Circular objects will have higher number of points.
+            approx = cv2.approxPolyDP(cnt,epsilon,True)
+            #print('aprox',approx)
+            #and M['m00']<threshold2
+            if M['m00']>threshold and len(approx) > 8:
                 #print('blob detected')
                 x,y,w,h = cv2.boundingRect(cnt)
                 zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
                 #cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-                print('zDepth blue',zDepth)
+                #print('zDepth blue',zDepth)
                 if zDepth<0.32:
                     t_init_b.append([(x,y),(w,h),M['m00'],zDepth])
         #print('t_init_b',t_init_b)
@@ -347,15 +402,15 @@ def talker():
                     pix_height=[]
                     xy_pix_height=[]
                     (x, y, w, h) = [int(v) for v in box]
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+                    #cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
                     centroid=(x+w/2,y+h/2)
-                    print('h',h,'w',w)
+                    #print('h',h,'w',w)
                     #centroid2=(int(x+w),int(y+h))
                     centroid3=(int(x+w/3),int(y+h/3))
                     ######
-                    cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
+                    #cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
                     #cv2.rectangle(frame, centroid2, (centroid2[0]+1, centroid2[1]+1), (0, 255, 0), 1)
-                    cv2.rectangle(frame, centroid3, (centroid3[0]+1, centroid3[1]+1), (0, 255, 0), 1)
+                    #cv2.rectangle(frame, centroid3, (centroid3[0]+1, centroid3[1]+1), (0, 255, 0), 1)
 
                     ######
                     cv2.putText(frame,str(i),(x,y),cv2.FONT_HERSHEY_SIMPLEX,1,(255, 255, 255),3)
@@ -389,7 +444,7 @@ def talker():
                     xy_pix_height=[]
                     (x, y, w, h) = [int(v) for v in box]
                     centroid=(x+w/2,y+h/2)
-                    print('h',h,'w',w)
+                    #print('h',h,'w',w)
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
                     cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
                     cv2.putText(frame,str(i),(x,y),cv2.FONT_HERSHEY_SIMPLEX,1,(255, 255, 255),3)
@@ -427,7 +482,7 @@ def talker():
                 #print('my trackers_b',my_trackerb)
                 distance(my_trackerr,my_trackerb)
                 detection_g(hsv)
-                #detection_r(hsv)
+                detection_r2(hsv)
 
                 #print('my trackers_r',my_trackerr)
                 #print('my trackers_b',my_trackerb)
@@ -488,7 +543,8 @@ def talker():
                         my_trackerb.append([bl[0],bl[1],0,centroid])
 
                 #elif frame_count==100:
-                elif success==False or successb==False or frame_count==200:
+                elif success==False or successb==False:
+                    #or frame_count==62
 
                     print('youve done it again')
                     ##marker variables to reinit tracker

@@ -35,8 +35,8 @@ def talker():
 
 ###For the em tracker
         serialCommand = 'Serial Data: '+ str(1) + ',' + \
-                        str(0) + ',' + \
                         str(n) + ',' + \
+                        str(0) + ',' + \
                         str(0) + ',' + \
                         str(0)
 
