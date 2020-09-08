@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # license removed for brevity
 import rospy
+import math
 from std_msgs.msg import String,Int32,Int32MultiArray
 from std_msgs.msg import UInt16
 import cv2                                # state of the art computer vision algorithms library
@@ -267,17 +268,19 @@ def talker():
                 x,y,w,h = cv2.boundingRect(cnt)
                 centroid=(x+w/2,y+h/2)
                 zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
-                cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-                cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
+                #cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+                #cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
                 if i_g==True:
                     tracker_g.append([(x,y),(w,h),centroid,zDepth])
                 else:
                     distance_g= dist.euclidean((x,y), tracker_g[0][0])
-                    if distance_g<2:
+                    if distance_g<3:
                         print("no green update")
-                    elif distance_g>2:
+                        print("tracker_g",tracker_g[0])
+                    elif distance_g>3:
                         del tracker_g[:]
                         tracker_g.append([(x,y),(w,h),centroid,zDepth])
+                        print("green update",distance_g)
 
 
     #detection of blue references
@@ -382,6 +385,7 @@ def talker():
             ##print('marker',marker[0][3])
             #print('rotpoint',rotpoint)
             #print('marker',marker[0])
+            #xy,wh,depth,centroid,i for marker and reference
 
 
             #real world distances
@@ -399,13 +403,18 @@ def talker():
             #euclidian in 3D ???
             #[0.10853161662817001, -0.004322144202888012, 0.3850000202655792]
             distance1= dist.euclidean(rl_pointm1, rl_pointr3)
-            distance2= dist.euclidean(rl_pointm2, (rl_pointr1))
+            distance2= dist.euclidean(rl_pointm2, rl_pointr1)
             distance3= dist.euclidean(rl_pointm3, rl_pointr2)
 
             del distance_rl[:]
+            #distance of rotational motor
             distance_rl.append(distance1*1000)
+
+            #distance of side translation
             distance_rl.append(distance2*1000)
-            distance_rl.append(distance2*1000)
+
+            #distance of middle translation
+            distance_rl.append(distance3*1000)
 
             #print(distance_rl)
             #pixel coordinates
@@ -432,6 +441,9 @@ def talker():
         new_img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
 
         return [new_img, alpha, beta]
+
+    def get_angle(p1, p2):
+        return math.atan2(p1[1]*1000 - p2[1]*1000, p1[0]*1000 - p2[0]*1000) * 180/math.pi
 
 
     while not rospy.is_shutdown():
@@ -607,18 +619,26 @@ def talker():
                     #del tracker_g[:]
                     print('Doing calibration of green')
                     detection_g(hsv)
-                    if frame_count==61:
-                        i_g=False
+                    i_g=False
 
                     if len(tracker_g)>0:
                         #print detected
+                        ##print the tracker to see how it is working
+                        cv2.rectangle(frame,(tracker_g[0][0]),(tracker_g[0][0][0]+tracker_g[0][1][0],tracker_g[0][0][1]+tracker_g[0][1][0]),(255,0,0),2)
+                        cv2.rectangle(frame, tracker_g[0][2], (tracker_g[0][2][0]+1, tracker_g[0][2][1]+1), (0, 255, 0), 1)
+
+                        ##do the rest
                         rl_pointg1 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(tracker_g[0][2][0]),int(tracker_g[0][2][1])], tracker_g[0][3])
                         rl_pointr2 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(my_trackerr[0][3][0]),int(my_trackerr[0][3][1])], my_trackerr[0][2])
+                        xz_distance=(dist.euclidean((rl_pointg1[0],rl_pointg1[2]),(rl_pointr2[0],rl_pointr2[2])))*1000
+                        yz_distance=(dist.euclidean((rl_pointg1[1],rl_pointg1[2]),(rl_pointr2[1],rl_pointr2[2])))*1000
+                        angle= get_angle((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1]))
                         distance_g=(dist.euclidean(rl_pointg1,rl_pointr2))*1000
-                        print('distanceG',distance_g)
+                        print('distanceG',distance_g,"xz",xz_distance,"yz",yz_distance,'angle',angle)
 
                         #and distance_g>= 50
-                        if distance_g<= 52:
+                        #if distance_g<=155 and:
+                        if angle<=155 and angle>153:
                             mess.data=[0,1,0]
                             for i in range(30):
                                 pub.publish(mess)
@@ -645,17 +665,21 @@ def talker():
                     distance(my_trackerr,my_trackerb)
                     print('needed',distance_rl)
                     ##so that actually gets passed on
-                    if distance_rl[1]<40 and distance_rl[2]<40:
+
+                    ##distance 1 is for side translation
+                    ##distance 2 is for middle translation
+
+                    if distance_rl[1]<37 and distance_rl[2]<58:
                         mess.data=[3,1,1]
                         pub.publish(mess)
                         ##done_calib=False
-                    elif distance_rl[1]<40 and distance_rl[2]>40:
+                    elif distance_rl[1]<37 and distance_rl[2]>58:
                         mess.data=[3,1,2]
                         pub.publish(mess)
-                    elif distance_rl[1]>40 and distance_rl[2]<40:
+                    elif distance_rl[1]>37 and distance_rl[2]<58:
                         mess.data=[3,2,1]
                         pub.publish(mess)
-                    elif distance_rl[1]>40 and distance_rl[2]>40:
+                    elif distance_rl[1]>37 and distance_rl[2]>58:
                         mess.data=[3,2,2]
                         pub.publish(mess)
 
