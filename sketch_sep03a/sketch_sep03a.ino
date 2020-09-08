@@ -142,14 +142,14 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
     }
  }
  if (cmd_msg.data[0]==3){
-  if (cmd_msg.data[1]==2 and cmd_msg.data[2]==2){
+  if (cmd_msg.data[2]==2 and cmd_msg.data[1]==2){
     setMP[0] = 0;
     setMP[1] = -90;
     setMP[2] = 0;
     setMP[3] = -112;
     nh.loginfo("both are 2,2");
     }
-   else if (cmd_msg.data[1]==1 and cmd_msg.data[2]==2){
+   else if (cmd_msg.data[2]==1 and cmd_msg.data[1]==2){
     
     setMP[1] = 0;
     stepper[1].setPosition(0);
@@ -159,7 +159,7 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
     setMP[3] = -112;
     nh.loginfo("first is 1 second is 2");
     }
-   else if (cmd_msg.data[1]==2 and cmd_msg.data[2]==1){
+   else if (cmd_msg.data[2]==2 and cmd_msg.data[1]==1){
     
     setMP[3] = 0;
     stepper[3].setPosition(0);
@@ -169,7 +169,7 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
     setMP[1] = -90;
     nh.loginfo("first is 2 second is 1");
    }
-   else if (cmd_msg.data[1]==1 and cmd_msg.data[2]==1){
+   else if (cmd_msg.data[2]==1 and cmd_msg.data[1]==1){
     setMP[3] = 0;
     stepper[3].setPosition(0);
 
