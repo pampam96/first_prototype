@@ -44,7 +44,10 @@ def talker():
     my_trackerb=[]
     my_trackerr=[]
     tracker_g=[]
+    tracker_y=[]
+    t_y=[]
     init_calibration=False
+    second_calibration=False
     done_calib=True
     distance_rl=[]
     rotpoint=[]
@@ -100,13 +103,14 @@ def talker():
 
         lower_red2 = np.array([118,73,83])
         upper_red2 = np.array([179,255,255])
+        #upper_red2 = np.array([179,255,200])
 
         hsvr1 = cv2.inRange(hsv, lower_red, upper_red)
         hsvr2 = cv2.inRange(hsv, lower_red2, upper_red2)
         hsvr=hsvr1 +hsvr2
         #hsvr=cv2.morphologyEx(hsvr, cv2.MORPH_CLOSE, kernel)
         hsvr=cv2.morphologyEx(hsvr, cv2.MORPH_OPEN, kernel)
-        hsvr=cv2.GaussianBlur(hsvr,(3,3),0)
+        #hsvr=cv2.GaussianBlur(hsvr,(3,3),0)
         return hsvr
 
     #blue hsv calculation
@@ -140,6 +144,17 @@ def talker():
         hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_OPEN, kernel)
         return hsvb
 
+    def yellow_hsv():
+
+        lower_blue = np.array([20,67,36])
+        upper_blue = np.array([39,255,255])
+
+        hsvb = cv2.inRange(hsv2, lower_blue, upper_blue)
+
+        hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_CLOSE, kernel)
+        hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_OPEN, kernel)
+        return hsvb
+
     #detection of the red markers
     def detection_r(hsv):
 
@@ -148,7 +163,8 @@ def talker():
         upper_red = np.array([12,255,255])
 
         lower_red2 = np.array([118,73,83])
-        upper_red2 = np.array([179,255,255])
+        #upper_red2 = np.array([179,255,255])
+        upper_red2 = np.array([179,255,158])
 
         hsvr1 = cv2.inRange(hsv, lower_red, upper_red)
         hsvr2 = cv2.inRange(hsv, lower_red2, upper_red2)
@@ -285,8 +301,42 @@ def talker():
                 #        del tracker_g[:]
                 #        tracker_g.append([(x,y),(w,h),centroid,zDepth])
                 #        print("green update",distance_g)
+    def detection_y(hsv2):
 
+        # define range of blue color in HSV
+        lower_blue = np.array([20,67,36])
+        upper_blue = np.array([39,255,255])
 
+        # Threshold the HSV image to get only blue colors
+        hsvb = cv2.inRange(hsv2, lower_blue, upper_blue)
+        #hsvb2 = cv2.inRange(hsv2, lower_blue21, upper_blue2)
+        #hsvb=hsvb2+hsvb
+        #hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_CLOSE, kernel)
+        hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_OPEN, kernel)
+        hsvb=cv2.morphologyEx(hsvb, cv2.MORPH_CLOSE, kernel)
+        #hsvb=cv2.GaussianBlur(hsvb,(5,5),0)
+
+        ####Detection Code###########
+        im2,contours,hierarchy= cv2.findContours(hsvb, 1, 2)
+
+        #print(len(contours))
+        for cnt in contours:
+            M=cv2.moments(cnt)
+            epsilon=0.01*cv2.arcLength(cnt,True)
+                #print('epsilon',epsilon)
+                #Circular objects will have higher number of points.
+            approx = cv2.approxPolyDP(cnt,epsilon,True)
+            perimeter = cv2.arcLength(cnt,True)
+            print('perimeter',perimeter,'area',M['m00'])
+                #and M['m00']<threshold2
+                #and M['m00']<2000
+            if M['m00']>1900 and M['m00']<2500 and len(approx) > 8:
+                #print('blob detected')
+                x,y,w,h = cv2.boundingRect(cnt)
+                centroid=(x+w/2,y+h/2)
+                zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
+                del t_y[:]
+                t_y.append([(x,y),(w,h),centroid,zDepth])
     #detection of blue references
     def detection_b(hsv2):
 
@@ -491,6 +541,7 @@ def talker():
                 hsvr=red_hsv()
                 hsvb=blue_hsv()
                 hsvg=green_hsv()
+                hsvy=yellow_hsv()
 
                 #print('init_calibration',init_calibration)
 
@@ -668,7 +719,7 @@ def talker():
                     #print(tracker_g)
                     #print(init_calibration)
 
-                elif init_calibration==True and done_calib==True:
+                elif init_calibration==True and done_calib==True and second_calibration==False:
 
                     distance(my_trackerr,my_trackerb)
                     print('needed',distance_rl)
@@ -680,7 +731,7 @@ def talker():
                     if distance_rl[1]<37 and distance_rl[2]<58:
                         mess.data=[3,1,1]
                         pub.publish(mess)
-                        ##done_calib=False
+                        second_calibration=True;
                     elif distance_rl[1]<37 and distance_rl[2]>58:
                         mess.data=[3,1,2]
                         pub.publish(mess)
@@ -693,6 +744,43 @@ def talker():
 
                     #mess2.data=distance_rl
                     #print(mess2.data)
+                elif second_calibration==True:
+                    print("we are now doing the bottom lalala")
+                    detection_y(hsv)
+                    if t_y and not tracker_y:
+                        tracker_y.append(t_y[0])
+                    elif t_y and tracker_y:
+                        tracker_y_o=tracker_y[0]
+                        print("trackery",tracker_y_o,"ydetect",t_y)
+                        d_y=dist.euclidean(tracker_y_o[2],t_y[0][2])
+                        if d_y>2:
+                            tracker_y[0]=t_y[0]
+                        elif d_y<2:
+                            tracker_y[0]=tracker_y_o
+                    elif not t_y:
+                        del tracker_y[:]
+                        print("no detection keep moving")
+
+                    if len(tracker_y)>0:
+                        #print detected
+                        ##print the tracker to see how it is working
+                        cv2.rectangle(frame,(tracker_y[0][0]),(tracker_y[0][0][0]+tracker_y[0][1][0],tracker_y[0][0][1]+tracker_y[0][1][0]),(255,0,0),2)
+                        cv2.rectangle(frame, tracker_y[0][2], (tracker_y[0][2][0]+1, tracker_y[0][2][1]+1), (0, 255, 0), 1)
+
+                        rl_pointy1 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(tracker_y[0][2][0]),int(tracker_y[0][2][1])], tracker_y[0][3])
+                        rl_pointry1 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(my_trackerb[0][3][0]),int(my_trackerb[0][3][1])], my_trackerb[0][2])
+
+                        distance_y=(dist.euclidean(rl_pointy1,rl_pointry1))*1000
+                        print("distance_y",distance_y)
+                        if distance_y>110.8:
+                            mess.data=[4,1,0]
+                            pub.publish(mess)
+                        elif distance_y<110.8:
+                            mess.data=[4,2,0]
+                            pub.publish(mess)
+                    elif len(tracker_y)==0:
+                        mess.data=[4,2,0]
+                        pub.publish(mess)
 
 
                 # apply colormap to the depth for show
@@ -720,6 +808,9 @@ def talker():
 
                 cv2.namedWindow('hsvg', cv2.WINDOW_AUTOSIZE)
                 cv2.imshow('hsvg', hsvg)
+
+                cv2.namedWindow('hsvy', cv2.WINDOW_AUTOSIZE)
+                cv2.imshow('hsvy', hsvy)
 
                 #cv2.namedWindow('frame_changed', cv2.WINDOW_AUTOSIZE)
                 #cv2.imshow('frame_changed', normal_frame)
