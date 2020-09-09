@@ -270,21 +270,17 @@ def talker():
                 zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
                 #cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
                 #cv2.rectangle(frame, centroid, (centroid[0]+1, centroid[1]+1), (0, 255, 0), 1)
-                del tracker_g[:]
-                tracker_g.append([(x,y),(w,h),centroid,zDepth])
-
-                #if i_g==True or not tracker_g:
-                #    tracker_g.append([(x,y),(w,h),centroid,zDepth])
-                #else:
-                #    distance_g= dist.euclidean((x,y), tracker_g[0][0])
-                #    if distance_g<3:
-                #        print("no green update")
-                #        print("tracker_g",tracker_g[0])
-                #        tracker_g.append([(x,y),(w,h),centroid,zDepth])
-                #    elif distance_g>3:
-                #        del tracker_g[:]
-                #        tracker_g.append([(x,y),(w,h),centroid,zDepth])
-                #        print("green update",distance_g)
+                if i_g==True:
+                    tracker_g.append([(x,y),(w,h),centroid,zDepth])
+                else:
+                    distance_g= dist.euclidean((x,y), tracker_g[0][0])
+                    if distance_g<3:
+                        print("no green update")
+                        print("tracker_g",tracker_g[0])
+                    elif distance_g>3:
+                        del tracker_g[:]
+                        tracker_g.append([(x,y),(w,h),centroid,zDepth])
+                        print("green update",distance_g)
 
 
     #detection of blue references
@@ -635,18 +631,14 @@ def talker():
                         rl_pointg1 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(tracker_g[0][2][0]),int(tracker_g[0][2][1])], tracker_g[0][3])
                         rl_pointr2 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(my_trackerr[0][3][0]),int(my_trackerr[0][3][1])], my_trackerr[0][2])
                         xz_distance=(dist.euclidean((rl_pointg1[0],rl_pointg1[2]),(rl_pointr2[0],rl_pointr2[2])))*1000
-                        xy_rdistance=(dist.euclidean((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1])))*1000
-
-                        xy_distance=(dist.euclidean(tracker_g[0][2],my_trackerr[0][3]))
-
                         yz_distance=(dist.euclidean((rl_pointg1[1],rl_pointg1[2]),(rl_pointr2[1],rl_pointr2[2])))*1000
                         angle= get_angle((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1]))
                         distance_g=(dist.euclidean(rl_pointg1,rl_pointr2))*1000
-                        print('distanceG',distance_g,"xy",xy_distance,"yz",yz_distance,'angle',angle)
+                        print('distanceG',distance_g,"xz",xz_distance,"yz",yz_distance,'angle',angle)
 
-                        #and distance_g<60
+                        #and distance_g>= 50
                         #if distance_g<=155 and:
-                        if angle<=156.5 and angle>153 and xy_distance<116:
+                        if angle<=155 and angle>153:
                             mess.data=[0,1,0]
                             for i in range(30):
                                 pub.publish(mess)
