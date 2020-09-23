@@ -83,7 +83,7 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
  //reading the size of the data
   
  if (cmd_msg.data[0]==0){
-  nh.loginfo("We have endtered rotation calib");
+  nh.loginfo("We have entered rotation calib");
  if (cmd_msg.data[1]==2){
     setMP[0] = -340;
     setMP[1] = 0;
@@ -142,6 +142,7 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
     }
  }
  if (cmd_msg.data[0]==3){
+  nh.loginfo("We have entered top translation calib");
   if (cmd_msg.data[2]==2 and cmd_msg.data[1]==2){
     setMP[0] = 0;
     setMP[1] = -90;
@@ -182,6 +183,7 @@ void servo_cb( const std_msgs::Int32MultiArray& cmd_msg){
    }
   }
   if (cmd_msg.data[0]==4){
+    nh.loginfo("We have entered bottom calib");
     if (cmd_msg.data[1]==2){
     setMP[0] = 0;
     setMP[1] = 0;
