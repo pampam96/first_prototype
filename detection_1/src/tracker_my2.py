@@ -55,6 +55,7 @@ def talker():
 
     ##### other variables #######
     threshold=100
+    threshold3=1000
     threshold2=4000
     kernel=np.ones((5,5),np.uint8)
     frame_count=0
@@ -136,7 +137,7 @@ def talker():
     def green_hsv():
 
         lower_blue = np.array([52,90,52])
-        upper_blue = np.array([77,255,255])
+        upper_blue = np.array([94,255,255])
 
         hsvb = cv2.inRange(hsv2, lower_blue, upper_blue)
 
@@ -262,7 +263,7 @@ def talker():
 
         # define range of blue color in HSV
         lower_blue = np.array([52,90,52])
-        upper_blue = np.array([77,255,255])
+        upper_blue = np.array([94,255,255])
 
         # Threshold the HSV image to get only blue colors
         hsvb = cv2.inRange(hsv2, lower_blue, upper_blue)
@@ -279,7 +280,7 @@ def talker():
         #print(len(contours))
         for cnt in contours:
             M=cv2.moments(cnt)
-            if M['m00']>threshold:
+            if M['m00']>threshold3:
                 #print('blob detected')
                 x,y,w,h = cv2.boundingRect(cnt)
                 centroid=(x+w/2,y+h/2)
@@ -330,13 +331,15 @@ def talker():
             print('perimeter',perimeter,'area',M['m00'])
                 #and M['m00']<threshold2
                 #and M['m00']<2000
-            if M['m00']>1900 and M['m00']<2500 and len(approx) > 8:
+            if M['m00']>1900 and M['m00']<2600 and len(approx) > 8:
                 #print('blob detected')
                 x,y,w,h = cv2.boundingRect(cnt)
                 centroid=(x+w/2,y+h/2)
                 zDepth=aligned_depth_frame.get_distance(int(x+w/2),int(y+h/2))
+                print("yellow depth",zDepth)
                 del t_y[:]
-                t_y.append([(x,y),(w,h),centroid,zDepth])
+                if zDepth<0.43 and zDepth>0:
+                    t_y.append([(x,y),(w,h),centroid,zDepth])
     #detection of blue references
     def detection_b(hsv2):
 
@@ -499,6 +502,32 @@ def talker():
     def get_angle(p1, p2):
         return math.atan2(p1[1]*1000 - p2[1]*1000, p1[0]*1000 - p2[0]*1000) * 180/math.pi
 
+    def get_angle3(a, b, c):
+        ang= math.degrees(math.atan2(c[1]-b[1],c[0]-b[0]) - math.atan2(a[1]-b[1], a[0]-b[0]))
+        return ang + 360 if ang < 0 else ang
+
+    def get_angle3d(a, b, c):
+         # Create vectors from points
+         ba = [ aa-bb for aa,bb in zip(a,b) ]
+         bc = [ cc-bb for cc,bb in zip(c,b) ]
+         print("ba",ba,"bc",bc,a,b,c)
+
+         # Normalize vector
+         nba = math.sqrt( sum ( (x**2.0 for x in ba) ) )
+         ba = [ x/nba for x in ba ]
+
+         nbc = math.sqrt( sum ( (x**2.0 for x in bc) ) )
+         bc = [ x/nbc for x in bc ]
+
+         #print("ba",ba,"bc",bc)
+
+         # Calculate scalar from normalized vectors
+         scale = sum ( (aa*bb for aa,bb in zip(ba,bc)) )
+         print("scale",scale)
+
+         # calculate the angle in radian
+         angle = math.acos(scale)
+         return angle
 
     while not rospy.is_shutdown():
         #rate.sleep()
@@ -616,7 +645,7 @@ def talker():
                         if len(old_trackerc[i])>3:
                             #updating xy
                             distance_old=dist.euclidean(tr[0],old_trackerc[i][0])
-                            print("old distance",distance_old)
+                            #print("old distance",distance_old)
                             if distance_old>2:
                                 tr[0]=old_trackerc[i][0]
                                 #updating centroid
@@ -640,7 +669,7 @@ def talker():
                         #print(old_tbc[i])
                         if len(old_tbc[i])>3:
                             distance_old=dist.euclidean(tb[0],old_tbc[i][0])
-                            print("old distance",distance_old)
+                            #print("old distance",distance_old)
                             if distance_old>2:
                                 #updating xy
                                 tb[0]=old_tbc[i][0]
@@ -683,21 +712,35 @@ def talker():
                         cv2.rectangle(frame, tracker_g[0][2], (tracker_g[0][2][0]+1, tracker_g[0][2][1]+1), (0, 255, 0), 1)
 
                         ##do the rest
+                        # real life green point
                         rl_pointg1 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(tracker_g[0][2][0]),int(tracker_g[0][2][1])], tracker_g[0][3])
+                        # real life red point
                         rl_pointr2 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(my_trackerr[0][3][0]),int(my_trackerr[0][3][1])], my_trackerr[0][2])
+                        # real life blue point
+                        rl_pointb2 = rs.rs2_deproject_pixel_to_point(depth_intrin, [int(my_trackerb[0][3][0]),int(my_trackerb[0][3][1])], my_trackerb[0][2])
+
                         xz_distance=(dist.euclidean((rl_pointg1[0],rl_pointg1[2]),(rl_pointr2[0],rl_pointr2[2])))*1000
                         xy_rdistance=(dist.euclidean((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1])))*1000
+                        xy_rbdistance=(dist.euclidean((rl_pointb2[0],rl_pointb2[1]),(rl_pointr2[0],rl_pointr2[1])))*1000
 
                         xy_distance=(dist.euclidean(tracker_g[0][2],my_trackerr[0][3]))
 
                         yz_distance=(dist.euclidean((rl_pointg1[1],rl_pointg1[2]),(rl_pointr2[1],rl_pointr2[2])))*1000
+
                         angle= get_angle((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1]))
+                        angle3= get_angle3((rl_pointg1[0],rl_pointg1[1]),(rl_pointr2[0],rl_pointr2[1]),(rl_pointb2[0],rl_pointb2[1]))
+                        angle3d= get_angle3d(rl_pointg1,rl_pointr2,rl_pointb2)
+
+                        #xyz
                         distance_g=(dist.euclidean(rl_pointg1,rl_pointr2))*1000
-                        print('distanceG',distance_g,"xy",xy_distance,"yz",yz_distance,'angle',angle)
+                        distance_gb=(dist.euclidean(rl_pointb2,rl_pointr2))*1000
+                        print('distanceG',distance_g,"xy",xy_distance,"yz",yz_distance,"angle",angle, "angle3",angle3,"angle3d",angle3d)
 
                         #and distance_g<60
                         #if distance_g<=155 and:
-                        if angle<=156.5 and angle>153 and xy_distance<116:
+                        #old code
+                        #if angle<=156.5 and angle>151 and xy_distance<116:
+                        if angle3d<=2.5 and angle3d>2.44 and xy_distance<116:
                             mess.data=[0,1,0]
                             for i in range(30):
                                 pub.publish(mess)
