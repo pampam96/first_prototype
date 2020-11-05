@@ -27,6 +27,7 @@ def callback(data):
     #check2=data.goal.trajectory.points[-1].positions[2]
     if orientation==1:
         print('first case')
+        ##rotation joint
         joint1=formater2(data.goal.trajectory.points[-1].positions[1])
         joint2=formater3(data.goal.trajectory.points[-1].positions[2])
         pub_msg.data=[1,joint1]
@@ -34,17 +35,20 @@ def callback(data):
         #we are here now
         print('second case')
         #print(data.goal.trajectory.points[-1])
+        ##rotation calculation
         joint1=formater1(data.goal.trajectory.points[-1].positions[0])
+        ##side translation
         joint2=formater2(data.goal.trajectory.points[-1].positions[1])
+        ##middle translation
         joint3=formater3(data.goal.trajectory.points[-1].positions[3])
         #pub_msg.data=[joint1,joint2,joint3,10]
-        oldvalues=[joint1,joint3,joint2,joint2,10]
+        oldvalues=[5,joint1,joint3,joint2,joint2]
         print("inside chain1 callback")
         print(oldvalues)
         print("inside chain1 callback")
 
     #print(check1,check2)
-    #joint_pub.publish(pub_msg)
+    joint_pub.publish(pub_msg)
     #old_values=[pub_msg.data[0],pub_msg.data[1],pub_msg.data[2]]
 
 #this is rn not called
@@ -79,11 +83,18 @@ def formater2(value):
     return int(value)
 #this is a new function needed for center motor
 def formater3(value):
-    value=((-(value*1000))+31.25)/0.625
+    #value=((-(value*1000))+31.25)/0.625
+    ##new calcualtion
+    #value=(((value*1000))+31.25)/0.625
+    ##newest calcualation
+    value=(((value*1000))+31.25)/0.6944444
     return int(value)
 #this is a new function needed for rotation motor this is to fix it
 def formater1(value):
-    value=((((value+0.31)*180)/3.14)/0.452)+130
+    ##old calculation
+    #value=((((value+0.31)*180)/3.14)/0.452)+130
+    ##new calcualtion gotta check this
+    value=(((-1*value)+1.5)/0.0088235)
     return int(value)
 #my test added code
 
